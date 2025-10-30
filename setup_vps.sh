@@ -25,6 +25,7 @@ apt-get install -y \
   git curl build-essential rsync \
   libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libxkbcommon0 \
   libxcomposite1 libxdamage1 libxrandr2 libgbm1 "${LIBASOUND_PACKAGE}"
+  libxcomposite1 libxdamage1 libxrandr2 libgbm1 libasound2
 
 if ! id "${BOT_USER}" &>/dev/null; then
   useradd --system --create-home --shell /bin/bash "${BOT_USER}"

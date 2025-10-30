@@ -46,6 +46,7 @@ def test_mexc_book_message_normalises_event() -> None:
         await client._handle_message(json.dumps(payload), _DummyWebSocket())
 
         event = await asyncio.wait_for(queue.get(), timeout=1.0)
+        event = await asyncio.wait_for(queue.get(), timeout=0.1)
         assert event.venue == "MEXC"
         assert event.instrument == "TNSR_USDT"
         assert event.best_bid == 1.2345
@@ -64,6 +65,7 @@ def test_whales_orderbook_frame_emits_event() -> None:
         await client._process_message(message)
 
         event = await asyncio.wait_for(queue.get(), timeout=1.0)
+        event = await asyncio.wait_for(queue.get(), timeout=0.1)
         assert event.venue == "WHALES"
         assert event.token == "ABC"
         assert event.best_bid == 1.5

@@ -3,6 +3,9 @@
 
 app:
   venue_poll_interval_seconds: 60
+  debounce_seconds: 30
+  min_notional_usdt: 100.0
+  spread_threshold_percent: 2.0
 
 venues:
   mexc:
@@ -27,6 +30,15 @@ venues:
 telegram:
   enabled: false
   bot_token: ${TELEGRAM_BOT_TOKEN}
+  bybit:
+    enabled: false
+  hyperliquid:
+    enabled: false
+  binance:
+    enabled: false
+
+telegram:
+  enabled: false
   chat_id: ${TELEGRAM_CHAT_ID}
   alert_prefix: "[Premarket Alert]"
 

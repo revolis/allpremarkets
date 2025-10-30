@@ -42,3 +42,5 @@ build-backend = "setuptools.build_meta"
 [project.scripts]
 premarket-bot = "app.runtime:main"
 premarket-admin = "admin.web:main"
+# Placeholder entry point. Will be updated in later phases.
+alert-bot = "common.logging:setup_logging"
