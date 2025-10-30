@@ -1,0 +1,20 @@
+# Python artifacts
+__pycache__/
+*.py[cod]
+*.egg-info/
+*.log
+
+# Virtual environments
+.env
+.venv/
+venv/
+
+# Project-specific
+logs/
+.env.local
+.env.*
+playwright-report/
+playwright/.cache/
+
+# Tooling
+poetry.lock
