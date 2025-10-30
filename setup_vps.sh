@@ -15,17 +15,54 @@ fi
 
 apt-get update
 
-LIBASOUND_PACKAGE=libasound2
-if ! apt-cache show "${LIBASOUND_PACKAGE}" >/dev/null 2>&1; then
-  LIBASOUND_PACKAGE=libasound2t64
+LIBASOUND_PRIMARY=libasound2
+LIBASOUND_FALLBACK=libasound2t64
+
+if apt-cache show "${LIBASOUND_PRIMARY}" >/dev/null 2>&1; then
+  LIBASOUND_CANDIDATE=$(apt-cache policy "${LIBASOUND_PRIMARY}" | awk '/Candidate:/ {print $2; exit}')
+  if [[ -z "${LIBASOUND_CANDIDATE}" || "${LIBASOUND_CANDIDATE}" == "(none)" ]]; then
+    LIBASOUND_PRIMARY=${LIBASOUND_FALLBACK}
+    LIBASOUND_FALLBACK=libasound2
+  fi
+else
+  LIBASOUND_PRIMARY=${LIBASOUND_FALLBACK}
+  LIBASOUND_FALLBACK=libasound2
 fi
 
-apt-get install -y \
-  "python${PYTHON_VERSION}" "python${PYTHON_VERSION}-venv" python3-pip \
-  git curl build-essential rsync \
-  libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libxkbcommon0 \
-  libxcomposite1 libxdamage1 libxrandr2 libgbm1 "${LIBASOUND_PACKAGE}"
-  libxcomposite1 libxdamage1 libxrandr2 libgbm1 libasound2
+COMMON_PACKAGES=(
+  "python${PYTHON_VERSION}"
+  "python${PYTHON_VERSION}-venv"
+  python3-pip
+  git
+  curl
+  build-essential
+  rsync
+  libnss3
+  libatk1.0-0
+  libatk-bridge2.0-0
+  libcups2
+  libdrm2
+  libxkbcommon0
+  libxcomposite1
+  libxdamage1
+  libxrandr2
+  libgbm1
+)
+
+apt-get install -y "${COMMON_PACKAGES[@]}"
+
+if ! apt-get install -y "${LIBASOUND_PRIMARY}"; then
+  if [[ "${LIBASOUND_PRIMARY}" != "${LIBASOUND_FALLBACK}" ]]; then
+    echo "Failed to install ${LIBASOUND_PRIMARY}; retrying with ${LIBASOUND_FALLBACK}..." >&2
+    if ! apt-get install -y "${LIBASOUND_FALLBACK}"; then
+      echo "Failed to install either ${LIBASOUND_PRIMARY} or ${LIBASOUND_FALLBACK}." >&2
+      exit 1
+    fi
+  else
+    echo "Failed to install ${LIBASOUND_PRIMARY}." >&2
+    exit 1
+  fi
+fi
 
 if ! id "${BOT_USER}" &>/dev/null; then
   useradd --system --create-home --shell /bin/bash "${BOT_USER}"
