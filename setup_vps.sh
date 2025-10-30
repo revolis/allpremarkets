@@ -14,10 +14,17 @@ if [[ $(id -u) -ne 0 ]]; then
 fi
 
 apt-get update
+
+LIBASOUND_PACKAGE=libasound2
+if ! apt-cache show "${LIBASOUND_PACKAGE}" >/dev/null 2>&1; then
+  LIBASOUND_PACKAGE=libasound2t64
+fi
+
 apt-get install -y \
   "python${PYTHON_VERSION}" "python${PYTHON_VERSION}-venv" python3-pip \
   git curl build-essential rsync \
   libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 libxkbcommon0 \
+  libxcomposite1 libxdamage1 libxrandr2 libgbm1 "${LIBASOUND_PACKAGE}"
   libxcomposite1 libxdamage1 libxrandr2 libgbm1 libasound2
 
 if ! id "${BOT_USER}" &>/dev/null; then
