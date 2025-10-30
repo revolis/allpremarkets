@@ -31,3 +31,16 @@ telegram:
 logging:
   level: INFO
   file: logs/bot.log
+
+rules:
+  spread:
+    venue_pairs:
+      - ["MEXC", "WHALES"]
+    min_spread_percent: 2.0
+    min_notional_usdt: 100.0
+    min_improvement_percent: 0.25
+    debounce_seconds: 30
+    slippage_bps: 10.0
+    fee_bps:
+      MEXC: 10.0
+      WHALES: 20.0
