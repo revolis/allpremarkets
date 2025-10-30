@@ -1,0 +1,18 @@
+[Unit]
+Description=Crypto Premarket Admin Panel
+After=network.target
+
+[Service]
+Type=simple
+User=premarket
+Group=premarket
+WorkingDirectory=/opt/crypto-premarket
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=/opt/crypto-premarket/.env
+ExecStart=/opt/crypto-premarket/.venv/bin/python -m admin.web --config /opt/crypto-premarket/config.yaml --host 0.0.0.0 --port 8080
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=15
+
+[Install]
+WantedBy=multi-user.target
