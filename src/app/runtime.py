@@ -1,3 +1,4 @@
+"""Async runtime harness that ties ingest, rules, and alert delivery together."""
 """Async runtime harness that ties together ingest, rules, and alerts."""
 
 """Runtime entry point that ties ingest, rules, and alert delivery together."""
