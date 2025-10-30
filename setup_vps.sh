@@ -18,15 +18,30 @@ apt-get update
 LIBASOUND_PRIMARY=libasound2
 LIBASOUND_FALLBACK=libasound2t64
 
-if apt-cache show "${LIBASOUND_PRIMARY}" >/dev/null 2>&1; then
-  LIBASOUND_CANDIDATE=$(apt-cache policy "${LIBASOUND_PRIMARY}" | awk '/Candidate:/ {print $2; exit}')
-  if [[ -z "${LIBASOUND_CANDIDATE}" || "${LIBASOUND_CANDIDATE}" == "(none)" ]]; then
+resolve_libasound_package() {
+  local package=$1
+  local candidate
+
+  if ! apt-cache show "${package}" >/dev/null 2>&1; then
+    return 1
+  fi
+
+  candidate=$(apt-cache policy "${package}" | awk '/Candidate:/ {print $2; exit}')
+  if [[ -z "${candidate}" || "${candidate}" == "(none)" ]]; then
+    return 1
+  fi
+
+  return 0
+}
+
+if ! resolve_libasound_package "${LIBASOUND_PRIMARY}"; then
+  if resolve_libasound_package "${LIBASOUND_FALLBACK}"; then
     LIBASOUND_PRIMARY=${LIBASOUND_FALLBACK}
     LIBASOUND_FALLBACK=libasound2
+  else
+    echo "Neither ${LIBASOUND_PRIMARY} nor ${LIBASOUND_FALLBACK} have installable candidates." >&2
+    exit 1
   fi
-else
-  LIBASOUND_PRIMARY=${LIBASOUND_FALLBACK}
-  LIBASOUND_FALLBACK=libasound2
 fi
 
 COMMON_PACKAGES=(
