@@ -1,0 +1,19 @@
+[Unit]
+Description=Crypto Premarket Alert Bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=premarket
+Group=premarket
+WorkingDirectory=/opt/crypto-premarket
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=/opt/crypto-premarket/.env
+ExecStart=/opt/crypto-premarket/.venv/bin/python -m app.runtime --config /opt/crypto-premarket/config.yaml
+Restart=always
+RestartSec=5
+TimeoutStopSec=20
+
+[Install]
+WantedBy=multi-user.target

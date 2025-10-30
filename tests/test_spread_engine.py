@@ -1,0 +1,252 @@
+import asyncio
+import contextlib
+from typing import List
+
+from common.bus import EventBus
+from common.models import EventType, MarketEvent
+from rules import SpreadAlert, SpreadConfig, SpreadEngine, VenuePair
+
+
+def test_spread_alert_emitted_when_threshold_passed() -> None:
+    async def _run() -> List[SpreadAlert]:
+        bus: EventBus[MarketEvent] = EventBus()
+        alerts: List[SpreadAlert] = []
+
+        async def capture(alert) -> None:
+            alerts.append(alert)
+
+        config = SpreadConfig(
+            venue_pairs=[VenuePair(("MEXC", "WHALES"))],
+            min_spread_percent=0.5,
+            min_notional_usdt=50.0,
+            min_improvement_percent=0.1,
+            debounce_seconds=30.0,
+            slippage_bps=5.0,
+            fee_bps={"MEXC": 10.0, "WHALES": 20.0},
+        )
+
+        engine = SpreadEngine(bus, config, capture)
+        task = engine.start()
+        await asyncio.sleep(0)
+
+        try:
+            await bus.publish(
+                MarketEvent(
+                    token="ABC",
+                    venue="MEXC",
+                    instrument="ABC_USDT",
+                    event_type=EventType.BOOK,
+                    best_bid=0.99,
+                    best_ask=1.00,
+                    last_price=None,
+                    size=None,
+                    notional=150.0,
+                    timestamp_ms=1,
+                    listing_info=None,
+                    raw={},
+                )
+            )
+            await bus.publish(
+                MarketEvent(
+                    token="ABC",
+                    venue="WHALES",
+                    instrument="ABC",
+                    event_type=EventType.BOOK,
+                    best_bid=1.05,
+                    best_ask=1.06,
+                    last_price=None,
+                    size=None,
+                    notional=200.0,
+                    timestamp_ms=2,
+                    listing_info=None,
+                    raw={},
+                )
+            )
+
+            for _ in range(10):
+                if alerts:
+                    break
+                await asyncio.sleep(0.01)
+        finally:
+            await engine.stop()
+            task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
+
+        return alerts
+
+    alerts = asyncio.run(_run())
+    assert alerts, "Expected at least one alert to be generated"
+    alert = alerts[0]
+    assert alert.buy_venue == "MEXC"
+    assert alert.sell_venue == "WHALES"
+    assert alert.net_spread_percent > 0.5
+
+
+def test_spread_alert_debounced_without_improvement() -> None:
+    async def _run() -> List[SpreadAlert]:
+        bus: EventBus[MarketEvent] = EventBus()
+        alerts: List[SpreadAlert] = []
+
+        async def capture(alert) -> None:
+            alerts.append(alert)
+
+        config = SpreadConfig(
+            venue_pairs=[VenuePair(("MEXC", "WHALES"))],
+            min_spread_percent=0.1,
+            min_notional_usdt=10.0,
+            min_improvement_percent=0.2,
+            debounce_seconds=60.0,
+            slippage_bps=0.0,
+            fee_bps={},
+        )
+
+        engine = SpreadEngine(bus, config, capture)
+        task = engine.start()
+        await asyncio.sleep(0)
+
+        try:
+            base_event = MarketEvent(
+                token="DEF",
+                venue="MEXC",
+                instrument="DEF_USDT",
+                event_type=EventType.BOOK,
+                best_bid=1.0,
+                best_ask=1.0,
+                last_price=None,
+                size=None,
+                notional=100.0,
+                timestamp_ms=1,
+                listing_info=None,
+                raw={},
+            )
+            await bus.publish(base_event)
+            await bus.publish(
+                MarketEvent(
+                    token="DEF",
+                    venue="WHALES",
+                    instrument="DEF",
+                    event_type=EventType.BOOK,
+                    best_bid=1.2,
+                    best_ask=1.21,
+                    last_price=None,
+                    size=None,
+                    notional=90.0,
+                    timestamp_ms=2,
+                    listing_info=None,
+                    raw={},
+                )
+            )
+
+            for _ in range(10):
+                if alerts:
+                    break
+                await asyncio.sleep(0.01)
+
+            await bus.publish(
+                base_event.model_copy(update={"timestamp_ms": 3, "best_ask": 0.9995})
+            )
+            await bus.publish(
+                MarketEvent(
+                    token="DEF",
+                    venue="WHALES",
+                    instrument="DEF",
+                    event_type=EventType.BOOK,
+                    best_bid=1.2001,
+                    best_ask=1.2101,
+                    last_price=None,
+                    size=None,
+                    notional=90.0,
+                    timestamp_ms=4,
+                    listing_info=None,
+                    raw={},
+                )
+            )
+
+            for _ in range(10):
+                if alerts:
+                    break
+                await asyncio.sleep(0.01)
+        finally:
+            await engine.stop()
+            task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
+
+        return alerts
+
+    alerts = asyncio.run(_run())
+    assert len(alerts) == 1, "Debounce should suppress duplicate alerts without improvement"
+
+
+def test_spread_alert_skips_without_notional() -> None:
+    async def _run() -> List[SpreadAlert]:
+        bus: EventBus[MarketEvent] = EventBus()
+        alerts: List[SpreadAlert] = []
+
+        async def capture(alert) -> None:
+            alerts.append(alert)
+
+        config = SpreadConfig(
+            venue_pairs=[VenuePair(("MEXC", "WHALES"))],
+            min_spread_percent=0.1,
+            min_notional_usdt=10.0,
+            min_improvement_percent=0.0,
+            debounce_seconds=10.0,
+            slippage_bps=0.0,
+            fee_bps={},
+        )
+
+        engine = SpreadEngine(bus, config, capture)
+        task = engine.start()
+        await asyncio.sleep(0)
+
+        try:
+            await bus.publish(
+                MarketEvent(
+                    token="XYZ",
+                    venue="MEXC",
+                    instrument="XYZ_USDT",
+                    event_type=EventType.BOOK,
+                    best_bid=0.5,
+                    best_ask=0.5,
+                    last_price=None,
+                    size=None,
+                    notional=None,
+                    timestamp_ms=1,
+                    listing_info=None,
+                    raw={},
+                )
+            )
+
+            await bus.publish(
+                MarketEvent(
+                    token="XYZ",
+                    venue="WHALES",
+                    instrument="XYZ",
+                    event_type=EventType.BOOK,
+                    best_bid=0.6,
+                    best_ask=0.61,
+                    last_price=None,
+                    size=None,
+                    notional=None,
+                    timestamp_ms=2,
+                    listing_info=None,
+                    raw={},
+                )
+            )
+
+            for _ in range(10):
+                if alerts:
+                    break
+                await asyncio.sleep(0.01)
+        finally:
+            await engine.stop()
+            task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
+
+        return alerts
+
+    alerts = asyncio.run(_run())
+    assert not alerts, "Engine should skip alerts when notional is unknown"

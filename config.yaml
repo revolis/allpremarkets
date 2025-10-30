@@ -1,0 +1,66 @@
+# Global configuration for the Crypto Premarket Alert Bot.
+# Values here are placeholders and should be tuned before production use.
+
+app:
+  venue_poll_interval_seconds: 60
+
+venues:
+  mexc:
+    enabled: true
+    symbols: ["TNSR_USDT"]
+  whales_market:
+    enabled: true
+    symbols: ["TNSR"]
+  bitget:
+    enabled: false
+    symbols: ["TNSR_USDT"]
+  bybit:
+    enabled: false
+    symbols: ["TNSRUSDT"]
+  hyperliquid:
+    enabled: false
+    symbols: ["TNSR"]
+  binance:
+    enabled: false
+    symbols: ["TNSRUSDT"]
+
+telegram:
+  enabled: false
+  bot_token: ${TELEGRAM_BOT_TOKEN}
+  chat_id: ${TELEGRAM_CHAT_ID}
+  alert_prefix: "[Premarket Alert]"
+
+logging:
+  level: INFO
+  file: logs/bot.log
+
+rules:
+  spread:
+    venue_pairs:
+      - ["MEXC", "WHALES"]
+    min_spread_percent: 2.0
+    min_notional_usdt: 100.0
+    min_improvement_percent: 0.25
+    debounce_seconds: 30
+    slippage_bps: 10.0
+    fee_bps:
+      MEXC: 10.0
+      WHALES: 20.0
+  hedged_spread:
+    enabled: false
+    pairs:
+      - order: "WHALES"
+        perp: "BYBIT"
+      - order: "MEXC"
+        perp: "BYBIT"
+    min_spread_percent: 1.5
+    min_notional_usdt: 150.0
+    min_improvement_percent: 0.25
+    debounce_seconds: 45
+    slippage_bps: 20.0
+    fee_bps:
+      WHALES: 20.0
+      MEXC: 10.0
+      BYBIT: 7.5
+      HYPERLIQUID: 5.0
+      BINANCE: 4.0
