@@ -10,3 +10,4 @@ __all__ = [
     "MarketEvent",
     "setup_logging",
 ]
+from .logging import setup_logging  # noqa: F401

@@ -3,6 +3,9 @@
 
 app:
   venue_poll_interval_seconds: 60
+  debounce_seconds: 30
+  min_notional_usdt: 100.0
+  spread_threshold_percent: 2.0
 
 venues:
   mexc:
