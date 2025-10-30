@@ -49,6 +49,8 @@ async def run_demo(args: argparse.Namespace) -> None:
         raise SystemExit(
             "No ingest clients enabled. Use --mexc-symbol, --whales, or a perp flag."
         )
+    if not clients:
+        raise SystemExit("No ingest clients enabled. Use --mexc-symbol or --whales.")
 
     for client in clients:
         await client.start()

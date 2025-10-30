@@ -17,6 +17,9 @@ to Telegram.
    To watch a perpetual venue alongside spot/orders you can add flags such as:
    ```bash
    poetry run python -m ingest.demo --whales --bybit-symbol TNSRUSDT
+2. Run the placeholder entry point:
+   ```bash
+   poetry run alert-bot
    ```
 
 ### Option B: Pip + virtual environment
@@ -139,3 +142,10 @@ immediately.
   logs/` is sufficient; restore by extracting into the application directory and
   restarting the systemd units.
 
+2. Run the placeholder entry point:
+   ```bash
+   python -m common.logging
+   ```
+
+Configuration lives in `config.yaml`. Secrets such as the Telegram token should
+reside in a local `.env` (see `.env.example`).
