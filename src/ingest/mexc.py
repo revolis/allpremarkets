@@ -97,6 +97,7 @@ class MexcBookTickerClient(IngestClient):
 
         parts = channel.split("@")
         if len(parts) < 3:
+        if len(parts) < 4:
             return
         symbol = parts[-1]
         token = symbol.split("_")[0]
@@ -125,6 +126,10 @@ class MexcBookTickerClient(IngestClient):
             bid_size=bid_qty,
             ask_size=ask_qty,
             notional=min(notional_candidates) if notional_candidates else None,
+            best_bid=float(data.get("b")) if data.get("b") else None,
+            best_ask=float(data.get("a")) if data.get("a") else None,
+            last_price=float(data.get("bp")) if data.get("bp") else None,
+            size=float(data.get("B")) if data.get("B") else None,
             timestamp_ms=ts,
             raw=payload,
         )

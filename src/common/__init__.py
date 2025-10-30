@@ -12,3 +12,6 @@ __all__ = [
     "load_config",
     "setup_logging",
 ]
+    "setup_logging",
+]
+from .logging import setup_logging  # noqa: F401

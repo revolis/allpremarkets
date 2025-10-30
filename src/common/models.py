@@ -51,6 +51,7 @@ class MarketEvent(BaseModel):
     ask_size: Optional[float] = Field(
         None, description="Best ask size when provided by the venue"
     )
+    size: Optional[float] = Field(None, description="Size associated with the event")
     notional: Optional[float] = Field(
         None, description="Price multiplied by size for quick filtering"
     )
