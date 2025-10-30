@@ -158,6 +158,16 @@ class WhalesMarketClient(IngestClient):
         best_bid = payload.get("bestBid") or payload.get("best_bid")
         best_ask = payload.get("bestAsk") or payload.get("best_ask")
         size = payload.get("size") or payload.get("amount") or payload.get("quantity")
+        bid_size = (
+            payload.get("bestBidSize")
+            or payload.get("bidSize")
+            or payload.get("bidAmount")
+        )
+        ask_size = (
+            payload.get("bestAskSize")
+            or payload.get("askSize")
+            or payload.get("askAmount")
+        )
         price = payload.get("price") or payload.get("last_price") or payload.get("mid")
         notional = None
         try:
@@ -175,6 +185,8 @@ class WhalesMarketClient(IngestClient):
             best_ask=float(best_ask) if best_ask is not None else None,
             last_price=float(price) if price is not None else None,
             size=float(size) if size is not None else None,
+            bid_size=float(bid_size) if bid_size is not None else None,
+            ask_size=float(ask_size) if ask_size is not None else None,
             notional=notional,
             timestamp_ms=ts,
             listing_info=payload if event_type is EventType.LISTING else None,

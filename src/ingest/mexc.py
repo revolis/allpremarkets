@@ -96,17 +96,36 @@ class MexcBookTickerClient(IngestClient):
             return
 
         parts = channel.split("@")
+        if len(parts) < 3:
         if len(parts) < 4:
             return
         symbol = parts[-1]
         token = symbol.split("_")[0]
         ts = int(float(data.get("t", time.time() * 1000)))
 
+        best_bid = float(data.get("b")) if data.get("b") else None
+        best_ask = float(data.get("a")) if data.get("a") else None
+        bid_qty = float(data.get("B")) if data.get("B") else None
+        ask_qty = float(data.get("A")) if data.get("A") else None
+
+        notional_candidates = []
+        if best_bid and bid_qty:
+            notional_candidates.append(best_bid * bid_qty)
+        if best_ask and ask_qty:
+            notional_candidates.append(best_ask * ask_qty)
+
         event = MarketEvent(
             token=token,
             venue="MEXC",
             instrument=symbol,
             event_type=EventType.BOOK,
+            best_bid=best_bid,
+            best_ask=best_ask,
+            last_price=float(data.get("bp")) if data.get("bp") else None,
+            size=bid_qty,
+            bid_size=bid_qty,
+            ask_size=ask_qty,
+            notional=min(notional_candidates) if notional_candidates else None,
             best_bid=float(data.get("b")) if data.get("b") else None,
             best_ask=float(data.get("a")) if data.get("a") else None,
             last_price=float(data.get("bp")) if data.get("bp") else None,

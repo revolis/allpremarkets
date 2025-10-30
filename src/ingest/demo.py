@@ -8,6 +8,9 @@ import signal
 
 from common import EventBus, MarketEvent
 
+from .binance import BinanceFuturesTickerClient
+from .bybit import BybitTickerClient
+from .hyperliquid import HyperliquidTickerClient
 from .mexc import MexcBookTickerClient, MexcListingPoller
 from .whales import WhalesConfig, WhalesMarketClient
 
@@ -31,6 +34,21 @@ async def run_demo(args: argparse.Namespace) -> None:
         config = WhalesConfig(tokens=args.whales_tokens or None, headless=not args.debug)
         clients.append(WhalesMarketClient(bus=bus, config=config))
 
+    if args.bybit_symbol:
+        clients.append(BybitTickerClient(bus=bus, symbols=[args.bybit_symbol]))
+    if args.hyperliquid_symbol:
+        clients.append(
+            HyperliquidTickerClient(bus=bus, symbols=[args.hyperliquid_symbol])
+        )
+    if args.binance_symbol:
+        clients.append(
+            BinanceFuturesTickerClient(bus=bus, symbols=[args.binance_symbol])
+        )
+
+    if not clients:
+        raise SystemExit(
+            "No ingest clients enabled. Use --mexc-symbol, --whales, or a perp flag."
+        )
     if not clients:
         raise SystemExit("No ingest clients enabled. Use --mexc-symbol or --whales.")
 
@@ -83,6 +101,18 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         "--whales-tokens",
         nargs="*",
         help="Optional list of whales.market token tickers to open directly",
+    )
+    parser.add_argument(
+        "--bybit-symbol",
+        help="Subscribe to a Bybit perp symbol (e.g. TNSRUSDT)",
+    )
+    parser.add_argument(
+        "--hyperliquid-symbol",
+        help="Subscribe to a Hyperliquid coin (e.g. TNSR)",
+    )
+    parser.add_argument(
+        "--binance-symbol",
+        help="Subscribe to a Binance futures symbol (e.g. TNSRUSDT)",
     )
     parser.add_argument(
         "--debug",

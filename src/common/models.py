@@ -25,6 +25,10 @@ class MarketEvent(BaseModel):
     venue: Literal[
         "MEXC",
         "WHALES",
+        "BYBIT",
+        "HYPERLIQUID",
+        "BINANCE",
+        "BITGET",
     ] = Field(..., description="Source venue identifier")
     instrument: str = Field(..., description="Venue specific symbol, e.g. TNSR_USDT")
     event_type: EventType = Field(..., description="Type of update received from venue")
@@ -36,6 +40,16 @@ class MarketEvent(BaseModel):
     )
     last_price: Optional[float] = Field(
         None, description="Last traded price where provided by venue"
+    )
+    size: Optional[float] = Field(
+        None,
+        description="Legacy aggregate size field (typically best bid quantity)",
+    )
+    bid_size: Optional[float] = Field(
+        None, description="Best bid size when provided by the venue"
+    )
+    ask_size: Optional[float] = Field(
+        None, description="Best ask size when provided by the venue"
     )
     size: Optional[float] = Field(None, description="Size associated with the event")
     notional: Optional[float] = Field(
